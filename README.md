@@ -1,50 +1,56 @@
-# Portfolio Optimization using LSTMs and Genetic Algorithms
+# Portfolio Optimization using LSTMs and a Genetic Algorithm
 
-### ⚠️ **Work in Progress** ⚠️
+###  **Work in Progress** ️
 > This is an active research and development project. The code, models, and documentation are currently under development, incomplete, and subject to frequent changes.
 
 ## 1. Project Overview
 
-This project explores the application of deep learning and evolutionary computation to the problem of financial portfolio optimization. Traditional methods (e.g., Modern Portfolio Theory) rely on static, linear assumptions about asset correlations and returns. This project aims to move beyond that by using **Long Short-Term Memory (LSTM) networks** to capture complex, non-linear time-series dynamics.
+This project explores advanced computational methods for financial portfolio optimization. We are developing and comparing two distinct approaches that leverage Recurrent Neural Networks (LSTMs) to capture complex, non-linear time-series dynamics in financial markets.
 
-We are developing two distinct LSTM-based approaches, which will be optimized and compared using a **Genetic Algorithm (GA)**.
+The goal is to move beyond the static, linear assumptions of traditional models (like Modern Portfolio Theory) by creating models that can adapt to changing market regimes.
 
-## 2. Core Methodology
+## 2. Methodology: Two Competing Models
 
-Our research is split into two primary experimental models.
+We are building two separate, competing models to solve the optimization problem.
 
-### Model 1: The "Asset-Level" LSTM
+### Model 1: The "Asset-Level" LSTM (End-to-End)
 
-This model takes a "bottom-up" approach by analyzing individual assets to determine optimal portfolio weights.
+This model takes a "bottom-up" approach by learning directly from individual assets.
 
-* **Input Data:** Time-series data for *N* individual stocks.
-* **Features:** For each asset, the network is fed a vector of raw and engineered features, such as:
+* **Concept:** This is an end-to-end model. The LSTM is trained to look at the features of *all* assets and directly output the optimal portfolio weights.
+* **Input Data:** A time-series tensor for *N* individual stocks.
+* **Features (per asset):** For each asset, the network receives a vector of raw and engineered features, such as:
     * Raw Price
-    * Historical Returns (e.g., 1-day, 5-day)
+    * Historical Returns
     * Historical Volatility (Sigma)
-    * Market Beta
-    * (Other technical indicators as developed)
-* **Architecture:** The LSTM processes these parallel time-series data streams.
-* **Output:** The model's final layer is designed to output a set of *N* portfolio weights $(w_1, w_2, ..., w_n)$ that sum to 1. The network is trained to find weights that optimize a specific objective function (e.g., maximizing the future Sharpe Ratio).
+* **Output:** A vector of *N* portfolio weights $(w_1, w_2, ..., w_n)$ that are constrained to sum to 1.
+* **Training:** The network is trained to find weights that directly optimize a future-looking objective function, such as the (risk-adjusted) return of the portfolio.
 
-### Model 2: The "Portfolio-Level" LSTM
+---
 
-This model takes a "top-down" approach. Instead of learning from individual stocks, it learns from the historical behavior of *entire portfolios*.
+### Model 2: The "Portfolio-Level" LSTM + Genetic Algorithm (Hybrid)
 
-* **Input Data:** Time-series data representing the daily performance of *M* different, pre-defined portfolio strategies (e.g., "Equal Weight," "Minimum Volatility," "Max Sharpe," etc.).
-* **Features:** The input vector for each time step will be the performance metrics of these *M* portfolios, such as:
-    * Portfolio Daily Return
-    * Portfolio Realized Volatility
-    * Portfolio Max Drawdown
-* **Architecture:** The LSTM learns the dynamic relationships and performance regimes of these different strategies.
-* **Output:** The model's goal is to predict which strategy (or blend of strategies) will perform best in the next time period, effectively creating a "strategy-of-strategies" allocation.
+This model takes a "top-down," two-stage hybrid approach. It separates the task of *prediction* from the task of *optimization*.
 
-## 3. Optimization with Genetic Algorithms
+* **Concept:** We hypothesize that searching for the optimal portfolio from all possible combinations of assets ("brute-force") is computationally intractable.
+* **The Problem:** An "enormous portfolio" creates a search space that is too large to calculate exhaustively.
+* **The Solution:** We use an LSTM to predict the *properties* of the ideal portfolio, and then use a Genetic Algorithm (GA) as an efficient *search tool* to find the portfolio that matches those properties.
 
-A simple, static model architecture is unlikely to be optimal. We will use a **Genetic Algorithm (GA)** as a high-level optimization layer to find the "fittest" model. The GA will be responsible for:
+#### Step A: The LSTM (The "Oracle")
+The LSTM's job is not to pick stocks, but to predict the *characteristics* of the best possible portfolio for the next time period, based on current market conditions.
 
-1.  **Hyperparameter Tuning:** Evolving the optimal architecture for both LSTMs (e.g., number of layers, neurons per layer, learning rate, and sequence length).
-2.  **Feature Selection:** Evolving the ideal combination of input features for Model 1.
-3.  **Model Selection:** Creating a "population" of trained models from both approaches and using the GA to find the champion model that demonstrates the most robust performance across a backtest.
+* **Input Data:** Time-series data of market-wide factors or the performance of different, pre-defined portfolio strategies.
+* **Output (Prediction):** A vector of *target properties*. For example:
+    * `Target_Expected_Return = 0.08`
+    * `Target_Expected_Volatility = 0.12`
+    * `Target_Max_Drawdown = -0.05`
 
-## 4. Repository Structure (Planned)
+#### Step B: The Genetic Algorithm (The "Searcher")
+Once the LSTM provides the "target," the Genetic Algorithm's job is to find the *actual* portfolio weights that create a portfolio with those properties.
+
+* **Search Space:** random possible portfolio weight combinations.
+* **Process:** The GA runs for a set number of generations, "evolving" a population of random portfolios (through crossover and mutation) until it finds a "fittest" individual that best matches the LSTM's target.
+
+This hybrid approach allows us to efficiently search a massive, non-linear problem space without calculating every possible outcome.
+
+## 3. Repository Structure (Planned)
